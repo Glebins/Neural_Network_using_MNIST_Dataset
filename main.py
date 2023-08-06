@@ -2,37 +2,22 @@ import numpy as np
 from mnist import MNIST
 import random
 
+from neural_network_functions import *
+
 import math
 from tkinter import *
 from tkinter.ttk import Scale
 
-file_save_weights = ["weights.txt", "weights_1.txt", "weights_2.txt", "weights_some_new.txt",
-                     "weights_speed_is_more.txt"]
+file_save_weights = ["w_2l_1.txt", "w_2l_2.txt", "w_3l_1.txt", "w_3l_2.txt"]
+chosen_number = 3
 
 dataset = MNIST('C:/Users/nedob/Programming/Data Science/Datasets/MNIST_handwritten_numbers/archive')
 images, labels = dataset.load_training()
 images, labels = np.array(images), np.array(labels)
 
-
-def compress_array(arr):
-    res_arr = np.zeros((28, 28))
-
-    for i in range(0, len(arr), 10):
-        for j in range(0, len(arr[0]), 10):
-            s = 0
-
-            for k in range(i, i + 10):
-                for h in range(j, j + 10):
-                    s += arr[k][h]
-
-            s /= 100
-            s *= 255
-            res_arr[i // 10][j // 10] = int(s)
-
-    return res_arr
+images = images / 255
 
 
-# Defining Class and constructor of the Program
 class Draw:
     def __init__(self, root):
 
@@ -80,10 +65,6 @@ class Draw:
                                  width=self.canvas_width)
         self.background.place(x=80, y=40)
 
-        ''' self.background.create_line(20, 0, 20, 300, fill="green", width=0)
-        self.background.create_line(40, 0, 40, 300, fill="yellow", width=0)
-        self.background.create_line(60, 0, 60, 300, fill="green", width=0) '''
-
         # Bind the background Canvas with mouse click
         self.background.bind("<B1-Motion>", self.paint)
 
@@ -119,16 +100,8 @@ class Draw:
         self.infographic = Canvas(self.root, width=550, height=320)
         self.infographic.place(x=400, y=40)
 
-        self.infographic.create_text(20, 30, text="0", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 60, text="1", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 90, text="2", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 120, text="3", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 150, text="4", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 180, text="5", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 210, text="6", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 240, text="7", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 270, text="8", fill="black", font='Helvetica 15 bold')
-        self.infographic.create_text(20, 300, text="9", fill="black", font='Helvetica 15 bold')
+        for i in range(1, 11):
+            self.infographic.create_text(20, 30 * i, text=str(i - 1), fill="black", font="Helvetica 15 bold")
 
         max_len = 300
         alpha = max_len / np.max(predict)
@@ -141,23 +114,31 @@ class Draw:
         self.result.create_text(30, 30, text=str(np.argmax(predict)), fill="black", font='Helvetica 15 bold')
 
     def guess_number(self):
-        weights_right, iters = read_weights_from_file(file_save_weights[2])
-        pixels = compress_array(self.pixels).T
-        pixels = np.reshape(pixels, (1, 784))
+        # weights_right, iters = read_weights_from_file_2l(file_save_weights[chosen_number])
+        test_images, test_labels = dataset.load_testing()
+        test_images, test_labels = np.array(test_images), np.array(test_labels)
+        test_images = test_images / 255
+        k = 12
 
-        pixels = pixels.astype(int)
+        weights_0_1, weights_1_2, iters = read_weights_from_file_3l(file_save_weights[2])
+        pixels = compress_array(self.pixels).T
+        pixels = np.reshape(pixels, 784)
+
+        pixels = pixels / 255
 
         for i in range(28):
             for j in range(28):
-                print(pixels[0][28 * i + j], end="\t")
+                print(int(pixels[28 * i + j] * 255), end="\t")
             print()
 
-        predict = get_predict(pixels[0], weights_right)
+        # predict = get_predict(pixels[0], weights_right)
+        layer_1 = relu(np.dot(pixels, weights_0_1))
+        predict = np.dot(layer_1, weights_1_2)
         self.draw_infographic(predict)
         print(predict, np.argmax(predict), sep="\n\n", end="\n")
 
 
-def test_nn(weights):
+def test_nn_2_layers(weights):
     test_images, test_labels = dataset.load_testing()
     test_images, test_labels = np.array(test_images), np.array(test_labels)
     test_right_answers = get_goal_predictions_in_right_form(test_labels)
@@ -171,6 +152,26 @@ def test_nn(weights):
     error_training_data = get_accuracy_of_prediction(prediction_on_training_data, goal_predict)
 
     return test_error, error_training_data
+
+
+def test_nn_3_layers(weights_0_1, weights_1_2):
+    test_images, test_labels = dataset.load_testing()
+    test_images, test_labels = np.array(test_images), np.array(test_labels)
+    test_images = test_images / 255
+
+    test_right_answers = get_goal_predictions_in_right_form(test_labels)
+
+    layer_1_test = relu(np.dot(test_images, weights_0_1))
+    test_predictions = np.dot(layer_1_test, weights_1_2)
+    test_error = get_accuracy_of_prediction(test_predictions, test_right_answers)
+
+    train_right_answers = get_goal_predictions_in_right_form(labels)
+
+    layer_1_train = relu(np.dot(images, weights_0_1))
+    train_prediction = np.dot(layer_1_train, weights_1_2)
+    train_error = get_accuracy_of_prediction(train_prediction, train_right_answers)
+
+    return test_error, train_error
 
 
 def get_predict(inputs, weights):
@@ -200,7 +201,7 @@ def get_goal_predictions_in_right_form(labels):
     return res
 
 
-def write_weights_in_file(num_its, weights, file_to_save):
+def write_weights_in_file_2l(num_its, weights, file_to_save):
     file = open(file_to_save, "wb")
     np.save(file, weights)
     file.write(num_its.to_bytes(24, byteorder='big', signed=False))
@@ -208,13 +209,32 @@ def write_weights_in_file(num_its, weights, file_to_save):
     file.close()
 
 
-def read_weights_from_file(file_with_weights):
+def write_weights_in_file_3l(num_its, weights_0_1, weights_1_2, file_to_save):
+    file = open(file_to_save, "wb")
+    np.save(file, weights_0_1)
+    np.save(file, weights_1_2)
+    file.write(num_its.to_bytes(24, byteorder='big', signed=False))
+
+    file.close()
+
+
+def read_weights_from_file_2l(file_with_weights):
     file = open(file_with_weights, "rb")
     w = np.load(file)
     num_its = int.from_bytes(file.read(), byteorder='big')
 
     file.close()
     return w, num_its
+
+
+def read_weights_from_file_3l(file_with_weights):
+    file = open(file_with_weights, "rb")
+    w1 = np.load(file)
+    w2 = np.load(file)
+    num_its = int.from_bytes(file.read(), byteorder='big')
+
+    file.close()
+    return w1, w2, num_its
 
 
 def get_accuracy_of_prediction(prediction, right):
@@ -229,19 +249,19 @@ def get_accuracy_of_prediction(prediction, right):
     return percentage_of_right_answers
 
 
-def training_nn():
+def training_nn_2_layer(file_with_weights):
     number_inputs = 784
     number_outputs = 10
     goal_predict = get_goal_predictions_in_right_form(labels)
 
     inputs = images
-    weights = np.random.rand(number_outputs, number_inputs)
+    # weights = np.random.rand(number_outputs, number_inputs)
 
     # epochs = 1000
-    alpha = 0.00000001
-    i = 0
+    alpha = 0.005
+    # i = 0
 
-    # weights, i = read_weights_from_file()
+    weights, i = read_weights_from_file_2l(file_with_weights)
 
     while True:
         for j in range(len(images)):
@@ -265,23 +285,97 @@ def training_nn():
             print("Error: " + str(get_accuracy_of_prediction(predict, goal_predict)))
 
         if i % 50 == 0:
-            print("----Test neural network: Err = " + str(test_nn(weights)))
+            print("----Test neural network: Err = " + str(test_nn_2_layers(weights)))
 
         if i % 300 == 0:
-            write_weights_in_file(i, weights, file_save_weights[3])
+            write_weights_in_file_2l(i, weights, file_with_weights)
 
         i += 1
 
 
-def check_weights():
-    for i in file_save_weights:
-        weights_right, iters = read_weights_from_file(i)
-        test_err, train_err = test_nn(weights_right)
+def training_nn_3_layers():
+    number_inputs = 784
+    number_outputs = 10
+    number_hidden = 800
+
+    np.random.seed(1)
+
+    # weights_0_1 = 0.2 * np.random.rand(number_inputs, number_hidden) - 0.1
+    # weights_1_2 = 0.2 * np.random.rand(number_hidden, number_outputs) - 0.1
+
+    goal_predict = get_goal_predictions_in_right_form(labels)
+
+    alpha = 0.00000001
+    epochs = 1000
+
+    weights_0_1, weights_1_2, i = read_weights_from_file_3l(file_save_weights[chosen_number])
+
+    while True:
+        ''' error, correct_cnt = (0, 0)
+    
+            for j in range(len(images)):
+            layer_0 = images[j: j + 1]
+            layer_1 = relu(np.dot(layer_0, weights_0_1))
+            layer_2 = np.dot(layer_1, weights_1_2)
+    
+            error += np.sum((labels[j: j + 1] - layer_2) ** 2)
+            correct_cnt += int(np.argmax(layer_2) == np.argmax(labels[j: j + 1]))
+    
+            layer_2_delta = labels[j: j + 1] - layer_2
+            layer_1_delta = np.dot(layer_2_delta, weights_1_2.T) * relu_derivative(layer_1)
+    
+            weights_1_2 += alpha * np.dot(layer_1.T, layer_2_delta)
+            weights_0_1 += alpha * np.dot(layer_0.T, layer_1_delta) '''
+
+        layer_0 = images
+        layer_1 = relu(np.dot(layer_0, weights_0_1))
+        layer_2 = np.dot(layer_1, weights_1_2)
+
+        error = np.sum(np.sum((layer_2 - goal_predict) ** 2))
+        # correct_cnt = get_accuracy_of_prediction(layer_2, goal_predict)
+
+        layer_2_delta = layer_2 - goal_predict
+        layer_1_delta = np.dot(layer_2_delta, weights_1_2.T) * relu_derivative(layer_1)
+
+        weights_1_2 -= alpha * np.dot(layer_1.T, layer_2_delta)
+        weights_0_1 -= alpha * np.dot(layer_0.T, layer_1_delta)
+
+        if i % 2 == 0 or i == epochs - 1:
+            test_err, train_err = test_nn_3_layers(weights_0_1, weights_1_2)
+            # print("I: " + str(i) + " Train-Err: " + str(error / float(len(images)))[0:5] + " Train-Acc: " +
+            # str(train_err)[0:4])
+
+            print("I: " + str(i) + " Train-Acc: " + str(train_err)[0:4] + "\tTest-Acc: " + str(test_err)[0:4] +
+                  "\tError: " + str(error / float(len(images)))[0:6])
+
+        if i % 100 == 0:
+            write_weights_in_file_3l(i, weights_0_1, weights_1_2, file_save_weights[chosen_number])
+
+        i += 1
+
+
+def check_weights_2l():
+    for i in file_save_weights[0:2]:
+        weights_right, iters = read_weights_from_file_2l(i)
+        test_err, train_err = test_nn_2_layers(weights_right)
 
         print(i + ":\nTraining data: " + str(train_err) + "% is correct\nTesting data: " + str(test_err) +
               "% is correct\n\n")
 
 
-window = Tk()
+def check_weights_3l():
+    for i in file_save_weights[2:]:
+        weights_0_1, weights_1_2, iters = read_weights_from_file_3l(i)
+        test_err, train_err = test_nn_3_layers(weights_0_1, weights_1_2)
+
+        print(i + ":\nTraining data: " + str(train_err) + "% is correct\nTesting data: " + str(test_err) +
+              "% is correct\n\n")
+
+
+'''window = Tk()
 p = Draw(window)
-window.mainloop()
+window.mainloop()'''
+
+# check_weights_3l()
+
+training_nn_3_layers()
