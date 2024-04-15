@@ -2,13 +2,14 @@ import numpy as np
 import math
 
 from tkinter import *
-
 from array_functions import *
+from knn import *
 
 
 class Draw:
-    def __init__(self, root):
+    def __init__(self, root, Classifier_class):
 
+        self.Classifier_class = Classifier_class
         self.infographic = None
         self.result = None
         self.canvas_width = 280
@@ -34,9 +35,10 @@ class Draw:
                                       command=self.print_array_of_pixels, width=9, relief=RIDGE)
         self.btn_print_image.place(x=0, y=70)
 
-        #self.btn_guess = Button(self.root, text="Guess the number", bd=4, bg='white',
-        #                        command=self.guess_number, width=10, relief=RIDGE)
-        #self.btn_guess.place(x=0, y=110)
+        self.btn_guess = Button(self.root, text="Guess the number", bd=4, bg='white',
+                                command=lambda x: self.Classifier_class.guess_number(self.pixels),
+                                width=10, relief=RIDGE)
+        self.btn_guess.place(x=0, y=110)
 
         # Creating a Scale for pointer and eraser size
         self.pointer_frame = LabelFrame(self.root, text='size', bd=5, bg='white', font=('arial', 15, 'bold'),

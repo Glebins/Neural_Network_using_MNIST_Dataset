@@ -1,10 +1,15 @@
 import numpy as np
 import random
 
+from array_functions import *
+
+file_save_weights = ["w_2l_1.txt", "w_2l_2.txt", "w_3l_1.txt", "w_3l_2.txt"]
+chosen_number = 3
+
 
 class NeuralNetwork:
 
-    def __int__(self, train_images, train_labels, test_images, test_labels):
+    def __init__(self, train_images, train_labels, test_images, test_labels):
         self.train_images = train_images
         self.train_labels = train_labels
         self.test_images = test_images
@@ -109,19 +114,19 @@ class NeuralNetwork:
     def training_nn_2_layer(self, file_with_weights):
         number_inputs = 784
         number_outputs = 10
-        goal_predict = get_goal_predictions_in_right_form(labels)
+        goal_predict = self.get_goal_predictions_in_right_form(self.train_labels)
 
-        inputs = images
+        inputs = self.train_images
         # weights = np.random.rand(number_outputs, number_inputs)
 
         # epochs = 1000
         alpha = 0.005
         # i = 0
 
-        weights, i = read_weights_from_file_2l(file_with_weights)
+        weights, i = self.read_weights_from_file_2l(file_with_weights)
 
         while True:
-            for j in range(len(images)):
+            for j in range(len(self.train_images)):
                 predict = np.dot(inputs[j], weights.T)
                 # error = sum(sum(np.square(goal_predict - predict)))
 
@@ -139,13 +144,13 @@ class NeuralNetwork:
             print(i)
             if i % 5 == 0:
                 # print("Prediction: " + str(predict) + "\t\nWeights:\n" + str(weights) + "\nError: " + str(error) + "\n")
-                print("Error: " + str(get_accuracy_of_prediction(predict, goal_predict)))
+                print("Error: " + str(self.get_accuracy_of_prediction(predict, goal_predict)))
 
             if i % 50 == 0:
-                print("----Test neural network: Err = " + str(test_nn_2_layers(weights)))
+                print("----Test neural network: Err = " + str(self.test_nn_2_layers(weights)))
 
             if i % 300 == 0:
-                write_weights_in_file_2l(i, weights, file_with_weights)
+                self.write_weights_in_file_2l(i, weights, file_with_weights)
 
             i += 1
 
@@ -156,15 +161,16 @@ class NeuralNetwork:
 
         np.random.seed(1)
 
-        # weights_0_1 = 0.2 * np.random.rand(number_inputs, number_hidden) - 0.1
-        # weights_1_2 = 0.2 * np.random.rand(number_hidden, number_outputs) - 0.1
+        weights_0_1 = 0.2 * np.random.rand(number_inputs, number_hidden) - 0.1
+        weights_1_2 = 0.2 * np.random.rand(number_hidden, number_outputs) - 0.1
+        i = 0
 
-        goal_predict = get_goal_predictions_in_right_form(labels)
+        goal_predict = self.get_goal_predictions_in_right_form(self.train_labels)
 
-        alpha = 0.00000001
+        alpha = 0.000001
         epochs = 1000
 
-        weights_0_1, weights_1_2, i = read_weights_from_file_3l(file_save_weights[chosen_number])
+        # weights_0_1, weights_1_2, i = self.read_weights_from_file_3l(file_save_weights[chosen_number])
 
         while True:
             ''' error, correct_cnt = (0, 0)
@@ -183,7 +189,7 @@ class NeuralNetwork:
                 weights_1_2 += alpha * np.dot(layer_1.T, layer_2_delta)
                 weights_0_1 += alpha * np.dot(layer_0.T, layer_1_delta) '''
 
-            layer_0 = images
+            layer_0 = self.train_images
             layer_1 = relu(np.dot(layer_0, weights_0_1))
             layer_2 = np.dot(layer_1, weights_1_2)
 
@@ -197,33 +203,52 @@ class NeuralNetwork:
             weights_0_1 -= alpha * np.dot(layer_0.T, layer_1_delta)
 
             if i % 2 == 0 or i == epochs - 1:
-                test_err, train_err = test_nn_3_layers(weights_0_1, weights_1_2)
+                test_err, train_err = self.test_nn_3_layers(weights_0_1, weights_1_2)
                 # print("I: " + str(i) + " Train-Err: " + str(error / float(len(images)))[0:5] + " Train-Acc: " +
                 # str(train_err)[0:4])
 
                 print("I: " + str(i) + " Train-Acc: " + str(train_err)[0:4] + "\tTest-Acc: " + str(test_err)[0:4] +
-                      "\tError: " + str(error / float(len(images)))[0:6])
+                      "\tError: " + str(error / float(len(self.train_images)))[0:6])
 
             if i % 100 == 0:
-                write_weights_in_file_3l(i, weights_0_1, weights_1_2, file_save_weights[chosen_number])
+                self.write_weights_in_file_3l(i, weights_0_1, weights_1_2, file_save_weights[chosen_number])
 
             i += 1
 
     def check_weights_2l(self):
         for i in file_save_weights[0:2]:
-            weights_right, iters = read_weights_from_file_2l(i)
-            test_err, train_err = test_nn_2_layers(weights_right)
+            weights_right, iters = self.read_weights_from_file_2l(i)
+            test_err, train_err = self.test_nn_2_layers(weights_right)
 
             print(i + ":\nTraining data: " + str(train_err) + "% is correct\nTesting data: " + str(test_err) +
                   "% is correct\n\n")
 
     def check_weights_3l(self):
         for i in file_save_weights[2:]:
-            weights_0_1, weights_1_2, iters = read_weights_from_file_3l(i)
-            test_err, train_err = test_nn_3_layers(weights_0_1, weights_1_2)
+            weights_0_1, weights_1_2, iters = self.read_weights_from_file_3l(i)
+            test_err, train_err = self.test_nn_3_layers(weights_0_1, weights_1_2)
 
             print(i + ":\nTraining data: " + str(train_err) + "% is correct\nTesting data: " + str(test_err) +
                   "% is correct\n\n")
+
+    def guess_number(self, pixels):
+        # weights_right, iters = read_weights_from_file_2l(file_save_weights[chosen_number])
+        k = 12
+
+        weights_0_1, weights_1_2, iters = self.read_weights_from_file_3l(file_save_weights[2])
+        pixels = compress_array(pixels).T
+        pixels = np.reshape(pixels, 784)
+
+        pixels = pixels / 255
+
+        for i in range(28):
+            for j in range(28):
+                print(int(pixels[28 * i + j] * 255), end="\t")
+            print()
+
+        # predict = get_predict(pixels[0], weights_right)
+        layer_1 = relu(np.dot(pixels, weights_0_1))
+        predict = np.dot(layer_1, weights_1_2)
 
 
 def relu(x):
