@@ -2,6 +2,7 @@ import collections
 import itertools
 
 import numpy as np
+from array_functions import *
 
 
 def get_accuracy_test(predicts, test_labeled_data):
@@ -20,16 +21,17 @@ class KNN:
         self.train_y = train_y
 
     def compute_distance(self, test_x, type_d='l2'):
-        assert self.train_x.shape[1] == test_x.shape[1],\
+        assert self.train_x.shape[1] == test_x.shape[1], \
             f"Train and test arrays have different dimensions: " \
             f"{self.train_x.shape} for trains vs {test_x.shape} for tests"
-
-        dists = np.zeros((test_x.shape[0], self.train_x.shape[0]))
 
         if type_d == 'l2':
             dists = np.sqrt(np.sum(np.square(test_x[:, None, :] - self.train_x), axis=2))
         elif type_d == 'l1':
             dists = np.sum(np.abs(test_x[:, None, :] - self.train_x), axis=2)
+        else:
+            raise ValueError("unknown distance type")
+
         return dists
 
     def predict(self, test_x):
@@ -49,4 +51,9 @@ class KNN:
         return predictions
 
     def guess_number(self, pixels):
-        pass
+        pixels = compress_array(pixels)
+        pixels = pixels.T
+        pixels /= 255
+        pixels = pixels.reshape((1, 784))
+
+        print(self.predict(pixels))

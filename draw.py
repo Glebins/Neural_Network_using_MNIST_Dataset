@@ -36,7 +36,7 @@ class Draw:
         self.btn_print_image.place(x=0, y=70)
 
         self.btn_guess = Button(self.root, text="Guess the number", bd=4, bg='white',
-                                command=lambda x: self.Classifier_class.guess_number(self.pixels),
+                                command=lambda: self.guess_number_lib(),
                                 width=10, relief=RIDGE)
         self.btn_guess.place(x=0, y=110)
 
@@ -103,3 +103,10 @@ class Draw:
         self.result = Canvas(self.root, bg='white', bd=5, relief=GROOVE, height=40, width=40)
         self.result.place(x=500, y=400)
         self.result.create_text(30, 30, text=str(np.argmax(predict)), fill="black", font='Helvetica 15 bold')
+
+    def guess_number_lib(self):
+        arr = compress_array(self.pixels)
+        arr = arr.T
+        arr /= 255
+        arr = arr.reshape((1, 784))
+        print(self.Classifier_class.predict(arr))
