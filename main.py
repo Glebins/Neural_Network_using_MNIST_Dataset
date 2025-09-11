@@ -17,8 +17,8 @@ import draw
 
 matplotlib.use('TkAgg')
 
-dataset = MNIST('C:/Users/nedob/Programming/Data Science/Datasets/MNIST_handwritten_numbers/archive')
-# dataset = MNIST('C:/Users/79386/Programming/Data_science/Datasets/mnist')
+# dataset = MNIST('C:/Users/nedob/Programming/Data Science/Datasets/MNIST_handwritten_numbers/archive')
+dataset = MNIST('C:/Users/79386/Programming/Data_science/Datasets/mnist')
 train_images, train_labels = dataset.load_training()
 test_images, test_labels = dataset.load_testing()
 train_images, train_labels, test_images, test_labels = \
