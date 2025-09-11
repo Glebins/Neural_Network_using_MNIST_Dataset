@@ -1,6 +1,8 @@
 import numpy as np
+import torch
 from mnist import MNIST
 import random
+import torch.nn as nn
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -17,8 +19,9 @@ import draw
 
 matplotlib.use('TkAgg')
 
-# dataset = MNIST('C:/Users/nedob/Programming/Data Science/Datasets/MNIST_handwritten_numbers/archive')
-dataset = MNIST('C:/Users/79386/Programming/Data_science/Datasets/mnist')
+dataset = MNIST('C:/Users/nedob/Programming/Data Science/Datasets/MNIST_handwritten_numbers/archive')
+# dataset = MNIST('C:/Users/79386/Programming/Data_science/Datasets/mnist')
+
 train_images, train_labels = dataset.load_training()
 test_images, test_labels = dataset.load_testing()
 train_images, train_labels, test_images, test_labels = \
@@ -37,14 +40,38 @@ test_labels = test_labels[0:int(len(test_labels) * alpha)]
 print(test_images.shape, train_images.shape)
 
 # knn_mnist = knn.KNN(k=10)
-knn_mnist = neighbors.KNeighborsClassifier(n_neighbors=3, p=2)
-knn_mnist.fit(train_images, train_labels)
+
+# knn_mnist = neighbors.KNeighborsClassifier(n_neighbors=3, p=2)
+# knn_mnist.fit(train_images, train_labels)
 
 # predictions = knn_mnist.predict(test_images)
 # print(np.mean(predictions == test_labels))
 
+custom_model = nn.Sequential(
+    nn.Conv2d(1, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+    nn.Conv2d(32, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+    nn.MaxPool2d(2),
+
+    nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+    nn.Conv2d(64, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+    nn.MaxPool2d(2),
+
+    nn.Conv2d(64, 96, 3, padding=1), nn.BatchNorm2d(96), nn.ReLU(),
+    nn.MaxPool2d(2),
+
+    nn.Flatten(),
+    nn.Dropout(0.1),
+    nn.Linear(96 * 3 * 3, 256), nn.ReLU(),
+    nn.Dropout(0.1),
+    nn.Linear(256, 128), nn.ReLU(),
+    nn.Dropout(0.1),
+    nn.Linear(128, 10)
+)
+
+custom_model.load_state_dict(torch.load("./nn_weights_without_transforms/49.pth"))
+
 window = Tk()
-p = draw.Draw(window, knn_mnist)
+p = draw.Draw(window, custom_model)
 window.mainloop()
 
 # check_weights_3l()

@@ -1,5 +1,8 @@
 import numpy as np
 import math
+import torch.nn as nn
+import torch
+from torch.nn.functional import softmax
 
 from tkinter import *
 from array_functions import *
@@ -109,4 +112,12 @@ class Draw:
         arr = arr.T
         arr /= 255
         arr = arr.reshape((1, 784))
-        print(self.Classifier_class.predict(arr))
+
+        if isinstance(self.Classifier_class, nn.Sequential):
+            arr = torch.tensor(arr.reshape(1, 1, 28, 28), dtype=torch.float)
+            preds = softmax(self.Classifier_class(arr).detach(), dim=1).numpy().reshape(10)
+            self.draw_infographic(preds)
+            guess = preds.argmax(0)
+            print(guess)
+        else:
+            print(self.Classifier_class.predict(arr))
