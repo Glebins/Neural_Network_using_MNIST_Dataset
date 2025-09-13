@@ -6,7 +6,6 @@ from torch.nn.functional import softmax
 
 from tkinter import *
 from array_functions import *
-from knn import *
 
 
 class Draw:

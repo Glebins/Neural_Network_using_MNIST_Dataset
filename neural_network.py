@@ -3,7 +3,7 @@ import random
 
 from array_functions import *
 
-file_save_weights = ["w_2l_1.txt", "w_2l_2.txt", "w_3l_1.txt", "w_3l_2.txt"]
+file_save_weights = ["w_2l_1.txt", "w_2l_2.txt", "w_3l_1.txt", "w_3l_2.txt", "w_3l_3.txt", "w_3l_4.txt", "w_3l_5.txt", "w_3l_6.txt"]
 chosen_number = 3
 
 
@@ -18,13 +18,13 @@ class NeuralNetwork:
     def test_nn_2_layers(self, weights):
         test_right_answers = self.get_goal_predictions_in_right_form(self.test_labels)
 
-        test_predictions = np.dot(self.test_images, weights.T)
+        test_predictions = np.dot(self.test_images, weights)
         test_error = self.get_accuracy_of_prediction(test_predictions, test_right_answers)
 
-        goal_predict = self.get_goal_predictions_in_right_form(self.train_labels)
+        train_right_answers = self.get_goal_predictions_in_right_form(self.train_labels)
 
-        prediction_on_training_data = np.dot(self.train_images, weights.T)
-        error_training_data = self.get_accuracy_of_prediction(prediction_on_training_data, goal_predict)
+        prediction_on_training_data = np.dot(self.train_images, weights)
+        error_training_data = self.get_accuracy_of_prediction(prediction_on_training_data, train_right_answers)
 
         return test_error, error_training_data
 
@@ -111,7 +111,7 @@ class NeuralNetwork:
         percentage_of_right_answers: float = true / (true + false) * 100
         return percentage_of_right_answers
 
-    def training_nn_2_layer(self, file_with_weights):
+    def training_nn_2_layers(self, file_with_weights=None):
         number_inputs = 784
         number_outputs = 10
         goal_predict = self.get_goal_predictions_in_right_form(self.train_labels)
@@ -119,38 +119,66 @@ class NeuralNetwork:
         inputs = self.train_images
         # weights = np.random.rand(number_outputs, number_inputs)
 
-        # epochs = 1000
-        alpha = 0.005
-        # i = 0
+        epochs = 1000
+        alpha = 0.0000001
 
-        weights, i = self.read_weights_from_file_2l(file_with_weights)
+        if file_with_weights is not None:
+            weights, i = self.read_weights_from_file_2l(file_with_weights)
+
+        else:
+            i = 0
+            weights = 0.2 * np.random.rand(number_inputs, number_outputs) - 0.1
 
         while True:
-            for j in range(len(self.train_images)):
-                predict = np.dot(inputs[j], weights.T)
-                # error = sum(sum(np.square(goal_predict - predict)))
+            # error = 0
+            # for j in range(len(self.train_images)):
+            #     predict = np.dot(inputs[j], weights.T)
+            #     error += sum(sum(np.square(goal_predict - predict)))
+            #
+            #     delta = predict - goal_predict[j]
+            #     inp = inputs[j]
+            #
+            #     delta = np.asmatrix(delta)
+            #     inp = np.asmatrix(inp)
+            #
+            #     delta_weights = alpha * np.dot(delta.T, inp)
+            #     weights -= delta_weights
 
-                delta = predict - goal_predict[j]
-                inp = inputs[j]
+            layer_0 = self.train_images
+            layer_1 = np.dot(layer_0, weights)
 
-                delta = np.asmatrix(delta)
-                inp = np.asmatrix(inp)
+            error = np.sum(np.sum((layer_1 - goal_predict) ** 2))
+            # correct_cnt = get_accuracy_of_prediction(layer_2, goal_predict)
 
-                delta_weights = alpha * np.dot(delta.T, inp)
-                weights -= delta_weights
+            # layer_2_delta = layer_2 - goal_predict
+            # layer_1_delta = np.dot(layer_2_delta, weights_1_2.T) * relu_derivative(layer_1)
 
-            predict = np.dot(inputs, weights.T)
+            # weights_1_2 -= alpha * np.dot(layer_1.T, layer_2_delta)
+            # weights_0_1 -= alpha * np.dot(layer_0.T, layer_1_delta)
 
-            print(i)
-            if i % 5 == 0:
-                # print("Prediction: " + str(predict) + "\t\nWeights:\n" + str(weights) + "\nError: " + str(error) + "\n")
-                print("Error: " + str(self.get_accuracy_of_prediction(predict, goal_predict)))
+            layer_1_delta = layer_1 - goal_predict
+            weights -= alpha * np.dot(layer_0.T, layer_1_delta)
 
-            if i % 50 == 0:
-                print("----Test neural network: Err = " + str(self.test_nn_2_layers(weights)))
+            # predict = np.dot(inputs, weights.T)
 
-            if i % 300 == 0:
-                self.write_weights_in_file_2l(i, weights, file_with_weights)
+            if i % 2 == 0 or i == epochs - 1:
+                test_err, train_err = self.test_nn_2_layers(weights)
+                # print("I: " + str(i) + " Train-Err: " + str(error / float(len(images)))[0:5] + " Train-Acc: " +
+                # str(train_err)[0:4])
+
+                print("I: " + str(i) + " Train-Acc: " + str(train_err)[0:4] + "\tTest-Acc: " + str(test_err)[0:4] +
+                      "\tError: " + str(error / float(len(self.train_images)))[0:6])
+
+            # print(i)
+            # if i % 5 == 0:
+            #     # print("Prediction: " + str(predict) + "\t\nWeights:\n" + str(weights) + "\nError: " + str(error) + "\n")
+            #     print("Error: " + str(self.get_accuracy_of_prediction(predict, goal_predict)))
+            #
+            # if i % 50 == 0:
+            #     print("----Test neural network: Err = " + str(self.test_nn_2_layers(weights)))
+
+            if i % 100 == 0:
+                self.write_weights_in_file_2l(i, weights, file_save_weights[0])
 
             i += 1
 
@@ -216,16 +244,19 @@ class NeuralNetwork:
             i += 1
 
     def check_weights_2l(self):
+        path_to_weights = "./perceptron_weights"
         for i in file_save_weights[0:2]:
-            weights_right, iters = self.read_weights_from_file_2l(i)
+            weights_right, iters = self.read_weights_from_file_2l(f"{path_to_weights}/{i}")
+            weights_right = weights_right.T
             test_err, train_err = self.test_nn_2_layers(weights_right)
 
             print(i + ":\nTraining data: " + str(train_err) + "% is correct\nTesting data: " + str(test_err) +
                   "% is correct\n\n")
 
     def check_weights_3l(self):
+        path_to_weights = "./perceptron_weights"
         for i in file_save_weights[2:]:
-            weights_0_1, weights_1_2, iters = self.read_weights_from_file_3l(i)
+            weights_0_1, weights_1_2, iters = self.read_weights_from_file_3l(f"{path_to_weights}/{i}")
             test_err, train_err = self.test_nn_3_layers(weights_0_1, weights_1_2)
 
             print(i + ":\nTraining data: " + str(train_err) + "% is correct\nTesting data: " + str(test_err) +
