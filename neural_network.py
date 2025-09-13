@@ -3,8 +3,7 @@ import random
 
 from array_functions import *
 
-file_save_weights = ["w_2l_1.txt", "w_2l_2.txt", "w_3l_1.txt", "w_3l_2.txt", "w_3l_3.txt", "w_3l_4.txt", "w_3l_5.txt", "w_3l_6.txt"]
-chosen_number = 3
+file_save_weights = ["w_2l_1.txt", "w_2l_2.txt", "w_3l.txt"]
 
 
 class NeuralNetwork:
@@ -239,13 +238,15 @@ class NeuralNetwork:
                       "\tError: " + str(error / float(len(self.train_images)))[0:6])
 
             if i % 100 == 0:
-                self.write_weights_in_file_3l(i, weights_0_1, weights_1_2, file_save_weights[chosen_number])
+                self.write_weights_in_file_3l(i, weights_0_1, weights_1_2, file_save_weights[-1])
 
             i += 1
 
     def check_weights_2l(self):
         path_to_weights = "./perceptron_weights"
-        for i in file_save_weights[0:2]:
+        for i in file_save_weights:
+            if not i.startswith("w_2l"):
+                continue
             weights_right, iters = self.read_weights_from_file_2l(f"{path_to_weights}/{i}")
             weights_right = weights_right.T
             test_err, train_err = self.test_nn_2_layers(weights_right)
@@ -255,7 +256,9 @@ class NeuralNetwork:
 
     def check_weights_3l(self):
         path_to_weights = "./perceptron_weights"
-        for i in file_save_weights[2:]:
+        for i in file_save_weights:
+            if not i.startswith("w_3l"):
+                continue
             weights_0_1, weights_1_2, iters = self.read_weights_from_file_3l(f"{path_to_weights}/{i}")
             test_err, train_err = self.test_nn_3_layers(weights_0_1, weights_1_2)
 
