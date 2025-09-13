@@ -27,17 +27,18 @@ train_images = train_images.reshape(-1, 1, 28, 28)
 test_images = test_images.reshape(-1, 1, 28, 28)
 
 batch_size = 64
+use_transforms = True
 
 train_transform = transforms.Compose([
     transforms.RandomRotation(10),
     transforms.RandomAffine(0, translate=(0.08, 0.08)),
     transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
+    transforms.Normalize(0.1307, 0.3081)
 ])
 
 test_transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
+    transforms.Normalize(0.1307, 0.3081)
 ])
 
 
@@ -59,15 +60,18 @@ class TransformTensorDataset(Dataset):
 
         return img, label
 
+if use_transforms:
+    train_set = TransformTensorDataset(train_images, train_labels, train_transform)
+    test_set = TransformTensorDataset(test_images, test_labels, test_transform)
 
-train_set = TransformTensorDataset(train_images, train_labels, train_transform)
-test_set = TransformTensorDataset(test_images, test_labels, test_transform)
+    train_loader_mnist = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True)
+    test_loader_mnist = DataLoader(test_set, batch_size=batch_size, shuffle=False, pin_memory=True)
 
-# train_loader_mnist = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True)
-# test_loader_mnist = DataLoader(test_set, batch_size=batch_size, shuffle=False, pin_memory=True)
+else:
+    train_loader_mnist = DataLoader(TensorDataset(train_images, train_labels), batch_size=batch_size, shuffle=True, pin_memory=True)
+    test_loader_mnist = DataLoader(TensorDataset(test_images, test_labels), batch_size=batch_size, shuffle=False, pin_memory=True)
 
-train_loader_mnist = DataLoader(TensorDataset(train_images, train_labels), batch_size=batch_size, shuffle=True, pin_memory=True)
-test_loader_mnist = DataLoader(TensorDataset(test_images, test_labels), batch_size=batch_size, shuffle=False, pin_memory=True)
+path_to_weights = "./nn_weights" if use_transforms else "./nn_weights_without_transforms"
 
 custom_model = nn.Sequential(
     nn.Conv2d(1, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
@@ -94,7 +98,7 @@ custom_model = nn.Sequential(
 def get_param_number(model):
     param_number = 0
     for param in model.parameters():
-        param_number += torch.tensor(param.shape).prod()
+        param_number += torch.tensor(param.shape).prod().item()
 
     return param_number
 
@@ -106,6 +110,8 @@ def get_test_accuracy(model: nn.Sequential, test_loader: DataLoader):
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
     right_answers = 0
+
+    model = model.to(device)
     model.eval()
 
     for X_batch, y_batch in test_loader:
@@ -162,24 +168,32 @@ def train(model: nn.Sequential, train_loader: DataLoader, test_loader: DataLoade
 
             print(f"#{epoch}. {current_train_loss}: {current_train_accuracy}, {current_test_accuracy}")
 
-            path_to_save_weights = "./nn_weights_without_transforms"
-
+            path_to_save_weights = path_to_weights
             torch.save(custom_model.state_dict(), f"{path_to_save_weights}/{epoch}.pth")
 
     return train_loss_history, train_accuracy_history, test_accuracy_history
 
 
-loss, train_acc, test_acc = train(custom_model, train_loader_mnist, test_loader_mnist, num_epochs=50)
+is_training = False
 
-fig, (axes_1, axes_2) = plt.subplots(1, 2)
+if is_training:
+    loss, train_acc, test_acc = train(custom_model, train_loader_mnist, test_loader_mnist, num_epochs=50)
 
-axes_1.plot(loss)
-axes_1.grid()
+    fig, (axes_1, axes_2) = plt.subplots(1, 2)
 
-axes_2.plot(train_acc, label="Train")
-axes_2.plot(test_acc, label="Test")
-axes_2.legend()
-axes_2.grid()
+    axes_1.plot(loss)
+    axes_1.grid()
 
-plt.tight_layout()
-plt.show()
+    axes_2.plot(train_acc, label="Train")
+    axes_2.plot(test_acc, label="Test")
+    axes_2.legend()
+    axes_2.grid()
+
+    plt.tight_layout()
+    plt.show()
+
+else:
+    custom_model.load_state_dict(torch.load(f"{path_to_weights}/49.pth", weights_only=True))
+
+    test_acc = get_test_accuracy(custom_model, test_loader_mnist)
+    print(test_acc)
