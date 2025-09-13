@@ -3,21 +3,21 @@ import math
 import torch.nn as nn
 import torch
 from torch.nn.functional import softmax
+from torchvision import transforms
 
 from tkinter import *
 from array_functions import *
 
 
 class Draw:
-    def __init__(self, root, Classifier_class):
+    def __init__(self, root, classifier_class):
 
-        self.Classifier_class = Classifier_class
+        self.classifier_class = classifier_class
         self.infographic = None
         self.result = None
         self.canvas_width = 280
         self.canvas_height = 280
 
-        # Defining title and Size of the Tkinter Window GUI
         self.pixels = np.zeros((self.canvas_width, self.canvas_height))
         self.root = root
         root.geometry("1000x600+550+200")
@@ -25,10 +25,8 @@ class Draw:
         self.root.configure(background="white")
         # self.root.resizable(0,0)
 
-        # variables for pointer and Eraser
         self.pointer = "black"
 
-        # Reset Button to clear the entire screen
         self.btn_clear_screen = Button(self.root, text="Clear Screen", bd=4, bg='white',
                                        command=self.clear_canvas, width=9, relief=RIDGE)
         self.btn_clear_screen.place(x=0, y=30)
@@ -42,22 +40,18 @@ class Draw:
                                 width=10, relief=RIDGE)
         self.btn_guess.place(x=0, y=110)
 
-        # Creating a Scale for pointer and eraser size
         self.pointer_frame = LabelFrame(self.root, text='size', bd=5, bg='white', font=('arial', 15, 'bold'),
                                         relief=RIDGE)
         self.pointer_frame.place(x=0, y=320, height=200, width=70)
 
         self.pointer_size = Scale(self.pointer_frame, orient=VERTICAL, from_=50, to=0, length=168)
-        self.pointer_size.set(10)
+        self.pointer_size.set(7)
         self.pointer_size.grid(row=0, column=1, padx=15)
 
-        # Defining a background color for the Canvas
-        # self.background = Canvas(self.root, bg='white', bd=5, relief=GROOVE, height=470, width=680)
         self.background = Canvas(self.root, bg='white', bd=5, relief=GROOVE, height=self.canvas_height,
                                  width=self.canvas_width)
         self.background.place(x=80, y=40)
 
-        # Bind the background Canvas with mouse click
         self.background.bind("<B1-Motion>", self.paint)
         self.root.bind("<Key>", lambda event: root.destroy() if event.char == "z" else None)
 
@@ -112,11 +106,16 @@ class Draw:
         arr /= 255
         arr = arr.reshape((1, 784))
 
-        if isinstance(self.Classifier_class, nn.Sequential):
-            arr = torch.tensor(arr.reshape(1, 1, 28, 28), dtype=torch.float)
-            preds = softmax(self.Classifier_class(arr).detach(), dim=1).numpy().reshape(10)
+        if isinstance(self.classifier_class, nn.Sequential):
+            arr = torch.tensor(arr.reshape(1, 28, 28), dtype=torch.float)
+
+            normalize = transforms.Normalize(0.1307, 0.3081)
+            arr = normalize(arr)
+            arr = arr.unsqueeze(0)
+
+            preds = softmax(self.classifier_class(arr).detach(), dim=1).numpy().reshape(10)
             self.draw_infographic(preds)
             guess = preds.argmax(0)
             print(guess)
         else:
-            print(self.Classifier_class.predict(arr))
+            print(self.classifier_class.predict(arr))
