@@ -28,8 +28,8 @@ test_images, test_labels = dataset.load_testing()
 train_images, train_labels, test_images, test_labels = \
     np.array(train_images), np.array(train_labels), np.array(test_images), np.array(test_labels)
 
-train_images = train_images / 1.0
-test_images = test_images / 1.0
+train_images = train_images / 255.0
+test_images = test_images / 255.0
 
 alpha = 1
 
@@ -40,45 +40,52 @@ test_labels = test_labels[0:int(len(test_labels) * alpha)]
 
 print(test_images.shape, train_images.shape)
 
-# custom_model = nn.Sequential(
-#     nn.Conv2d(1, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
-#     nn.Conv2d(32, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
-#     nn.MaxPool2d(2),
-#
-#     nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
-#     nn.Conv2d(64, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
-#     nn.MaxPool2d(2),
-#
-#     nn.Conv2d(64, 96, 3, padding=1), nn.BatchNorm2d(96), nn.ReLU(),
-#     nn.MaxPool2d(2),
-#
-#     nn.Flatten(),
-#     nn.Dropout(0.1),
-#     nn.Linear(96 * 3 * 3, 256), nn.ReLU(),
-#     nn.Dropout(0.1),
-#     nn.Linear(256, 128), nn.ReLU(),
-#     nn.Dropout(0.1),
-#     nn.Linear(128, 10)
-# )
-#
-# custom_model.load_state_dict(torch.load("./nn_weights_without_transforms/49.pth", weights_only=False))
+to_work_with = ["dnn models", "classic ml models", "perceptron models"]
+chosen_work_object = 0  # 0 - 2
+is_drawing_mode = True
 
-# model_mnist = neighbors.KNeighborsClassifier(n_neighbors=5, p=2)
-# model_mnist = ensemble.BaggingClassifier(n_estimators=100)
-model_mnist = XGBClassifier(n_estimators=500)
-model_mnist.fit(train_images, train_labels)
+if chosen_work_object == 0:
+    model = nn.Sequential(
+        nn.Conv2d(1, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+        nn.Conv2d(32, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+        nn.MaxPool2d(2),
 
-predictions = model_mnist.predict(test_images)
-print(np.mean(predictions == test_labels))
+        nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+        nn.Conv2d(64, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+        nn.MaxPool2d(2),
+
+        nn.Conv2d(64, 96, 3, padding=1), nn.BatchNorm2d(96), nn.ReLU(),
+        nn.MaxPool2d(2),
+
+        nn.Flatten(),
+        nn.Dropout(0.1),
+        nn.Linear(96 * 3 * 3, 256), nn.ReLU(),
+        nn.Dropout(0.1),
+        nn.Linear(256, 128), nn.ReLU(),
+        nn.Dropout(0.1),
+        nn.Linear(128, 10)
+    )
+    model.load_state_dict(torch.load("./nn_weights/49.pth", weights_only=False))
 
 
+elif chosen_work_object == 1:
+    model = neighbors.KNeighborsClassifier(n_neighbors=3)
+    # model_mnist_classic = ensemble.BaggingClassifier(n_estimators=100)
+    # model_mnist_classic = XGBClassifier(n_estimators=500)
+    model.fit(train_images, train_labels)
 
-# window = Tk()
-# p = draw.Draw(window, custom_model)
-# window.mainloop()
+    predictions = model.predict(test_images)
+    print(np.mean(predictions == test_labels))
 
-nn = neural_network.NeuralNetwork(train_images, train_labels, test_images, test_labels)
-nn.training_nn_2_layers()
-nn.check_weights_2l()
+elif chosen_work_object == 2:
+    model = neural_network.NeuralNetwork(train_images, train_labels, test_images, test_labels)
+    # model.training_nn_2_layers()
+    model.check_weights_2l()
 
-# training_nn_3_layers()
+else:
+    raise ValueError(f"Unknown parameter. It must be in range 0 - {len(to_work_with) - 1}")
+
+if is_drawing_mode:
+    window = Tk()
+    p = draw.Draw(window, model)
+    window.mainloop()
