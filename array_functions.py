@@ -41,7 +41,7 @@ def crop_to_bbox(bw, margin=3):
     y0 = max(0, y0 - margin)
     x1 = min(bw.shape[1] - 1, x1 + margin)
     y1 = min(bw.shape[0] - 1, y1 + margin)
-    return bw[y0:y1 + 1, x0:x1 + 1], (x0, y0, x1, y1)
+    return bw[y0:y1 + 1, x0:x1 + 1]
 
 
 def resize_keep_aspect_and_pad(img, target=28, inner_margin=2):
@@ -80,13 +80,13 @@ def center_by_centroid(img):
     return out
 
 
-def normalize_to_mnist(img_canvas, target=28, margin=6, inner_margin=2):
+def normalize_to_mnist(img_canvas, target=28, margin=3, inner_margin=2):
     """
     img_canvas: HxW uint8 grayscale (0..255)
     returns: 28x28 float32 (0..1) ready for model
     """
 
-    cropped, _ = crop_to_bbox(img_canvas, margin=margin)
+    cropped = crop_to_bbox(img_canvas, margin=margin)
     resized_padded = resize_keep_aspect_and_pad(cropped, target=target, inner_margin=inner_margin)
     centered = center_by_centroid(resized_padded)
     final = cv2.GaussianBlur(centered, (3, 3), 0)
