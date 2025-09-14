@@ -2,18 +2,27 @@ This application recognizes the numbers you draw.
 The models were trained on the MNIST dataset.
 No additional preprocessing techniques were applied.
 
-|              Model              | Max accuracy, % |
-|:-------------------------------:|:---------------:|
-| My perceptron with 2[^1] layers |      85.3       |
-| My perceptron with 3[^1] layers |      96.3       |
-|        KNN (3 neighbors)        |      97.3       |
-|               SVM               |      97.9       |
-|    Bagging (100 estimators)     |      96.9       |
-|    XGBoost (500 estimators)     |      98.1       |
-|          Random Forest          |      94.3       |
-|          Custom DNN 1           |      99.4       |
-|          Custom DNN 2           |      99.6       |
-|            Resnet18             |      99.5       |
+|                    Model                     | Max accuracy, % |
+|:--------------------------------------------:|:---------------:|
+|   My perceptron with 2[^1] layers (784-10)   |      85.3       |
+| My perceptron with 3[^1] layers (784-800-10) |      96.3       |
+|              KNN (3 neighbors)               |      97.3       |
+|                     SVM                      |      97.9       |
+|           Bagging (100 estimators)           |      96.9       |
+|           XGBoost (500 estimators)           |      98.1       |
+|                Random Forest                 |      94.3       |
+|                 Custom DNN 1                 |      99.4       |
+|                 Custom DNN 2                 |      99.6       |
+|                   Resnet18                   |      99.5       |
+
+Number of parameters:
+
+|              Model              | Number of parameters |
+|:-------------------------------:|:--------------------:|
+| My perceptron with 2[^1] layers |        7 840         |
+| My perceptron with 3[^1] layers |       635 200        |
+|           Custom DNN            |       376 586        |
+|            Resnet18             |      11 175 370      |
 
 [^1]: an input layer was taken into account
 
@@ -99,3 +108,34 @@ For alignment, we will apply the following steps:
 - Crop the digit to its bounding box.
 - Resize it to 28×28 pixels and add padding.
 - Center the image based on its center of mass.
+
+# Alignment pipeline
+
+1) User draws an image
+
+![1](alignment_example/1_app_start.png (1))
+
+2) The code sees it like this
+
+![2](alignment_example/2_gotten.png (2))
+
+3) Then it's cropped
+
+![3](alignment_example/3_cropped.png (3))
+
+4) Resized to 28x28
+
+![4](alignment_example/4_resized.png (4))
+
+5) Centered around the center of mass
+
+![5](alignment_example/5_centered.png (5))
+
+6) Blurred by Gauss
+
+![6](alignment_example/6_blurred.png (6))
+
+7) The image was guessed right
+
+![7](alignment_example/7_app_result.png (7))
+
