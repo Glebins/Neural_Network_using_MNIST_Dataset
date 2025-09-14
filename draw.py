@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import math
 import torch.nn as nn
@@ -101,9 +102,7 @@ class Draw:
         self.result.create_text(30, 30, text=str(np.argmax(predict)), fill="black", font='Helvetica 15 bold')
 
     def guess_number_lib(self):
-        arr = compress_array(self.pixels)
-        arr = arr.T
-        arr /= 255
+        arr = normalize_to_mnist(self.pixels).T
         arr = arr.reshape((1, 784))
 
         if isinstance(self.classifier_class, nn.Sequential):
