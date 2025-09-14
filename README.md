@@ -13,7 +13,7 @@ No additional preprocessing techniques were applied.
 |                Random Forest                 |      94.3       |
 |                 Custom DNN 1                 |      99.4       |
 |                 Custom DNN 2                 |      99.6       |
-|                   Resnet18                   |      99.5       |
+|                   Resnet18                   |      99.6       |
 
 Number of parameters:
 
