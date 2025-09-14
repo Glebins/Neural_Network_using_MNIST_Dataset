@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 from torchvision import transforms
+from torchvision.models import resnet18
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -73,26 +74,31 @@ else:
 
 path_to_weights = "./nn_weights" if use_transforms else "./nn_weights_without_transforms"
 
-custom_model = nn.Sequential(
-    nn.Conv2d(1, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
-    nn.Conv2d(32, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
-    nn.MaxPool2d(2),
+# custom_model = nn.Sequential(
+#     nn.Conv2d(1, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+#     nn.Conv2d(32, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+#     nn.MaxPool2d(2),
+#
+#     nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+#     nn.Conv2d(64, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+#     nn.MaxPool2d(2),
+#
+#     nn.Conv2d(64, 96, 3, padding=1), nn.BatchNorm2d(96), nn.ReLU(),
+#     nn.MaxPool2d(2),
+#
+#     nn.Flatten(),
+#     nn.Dropout(0.1),
+#     nn.Linear(96 * 3 * 3, 256), nn.ReLU(),
+#     nn.Dropout(0.1),
+#     nn.Linear(256, 128), nn.ReLU(),
+#     nn.Dropout(0.1),
+#     nn.Linear(128, 10)
+# )
 
-    nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
-    nn.Conv2d(64, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
-    nn.MaxPool2d(2),
-
-    nn.Conv2d(64, 96, 3, padding=1), nn.BatchNorm2d(96), nn.ReLU(),
-    nn.MaxPool2d(2),
-
-    nn.Flatten(),
-    nn.Dropout(0.1),
-    nn.Linear(96 * 3 * 3, 256), nn.ReLU(),
-    nn.Dropout(0.1),
-    nn.Linear(256, 128), nn.ReLU(),
-    nn.Dropout(0.1),
-    nn.Linear(128, 10)
-)
+custom_model = resnet18()
+custom_model.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+custom_model.fc = nn.Linear(512, 10, bias=True)
+print(custom_model)
 
 
 def get_param_number(model):
@@ -169,7 +175,7 @@ def train(model: nn.Sequential, train_loader: DataLoader, test_loader: DataLoade
             print(f"#{epoch}. {current_train_loss}: {current_train_accuracy}, {current_test_accuracy}")
 
             path_to_save_weights = path_to_weights
-            torch.save(custom_model.state_dict(), f"{path_to_save_weights}/{epoch}.pth")
+            torch.save(custom_model.state_dict(), f"{path_to_save_weights}/{epoch}_resnet18.pth")
 
     return train_loss_history, train_accuracy_history, test_accuracy_history
 
@@ -193,7 +199,7 @@ if is_training:
     plt.show()
 
 else:
-    custom_model.load_state_dict(torch.load(f"{path_to_weights}/49.pth", weights_only=True))
+    custom_model.load_state_dict(torch.load(f"{path_to_weights}/49_resnet18.pth", weights_only=True))
 
     test_acc = get_test_accuracy(custom_model, test_loader_mnist)
     print(test_acc)
