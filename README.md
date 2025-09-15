@@ -1,6 +1,5 @@
 This application recognizes the numbers you draw.
 The models were trained on the MNIST dataset.
-No additional preprocessing techniques were applied.
 
 |                    Model                     | Max accuracy, % |
 |:--------------------------------------------:|:---------------:|
